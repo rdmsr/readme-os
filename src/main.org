@@ -1,4 +1,4 @@
-#+TITLE: yes
+#+TITLE: Main file
 #+PROPERTY: header-args :tangle yes
 
 * Welcome to org-kernel
