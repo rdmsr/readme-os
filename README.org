@@ -7,7 +7,7 @@ This is a little kernel written in this repository's readme using literate progr
 ** Prerequisites
 To build the kernel, you need:
 - Emacs with org-mode installed
-- x86_64-elf-gcc (if you don't have it use gcc)
+- x86_64-elf-gcc (if you don't have it, use gcc)
 - GNU Make
 - wget
 - git
@@ -16,7 +16,7 @@ Run =make= and =make run= to build and run the kernel
 
 * Code
 ** Includes
-Includes the required files.
+Includes the required files such as =stdint.h= for =uint=, =stddef.h= for =size_t= and =stivale2.h= for bootloader structs.
 #+BEGIN_SRC c
   #include <stdint.h>
   #include <stddef.h>
@@ -24,7 +24,7 @@ Includes the required files.
 #+END_SRC
 
 ** Stivale tags
-Sets up the proper tags to get from the stivale boot protocol.
+Sets up the proper tags to get from the stivale boot protocol; Here we want to get the terminal tag from stivale which will allow us to write to the screen easily and the framebuffer tag to initialize the framebuffer.
  #+BEGIN_SRC c
    static uint8_t stack[4096];
    static struct stivale2_header_tag_terminal terminal_hdr_tag = {
@@ -32,7 +32,6 @@ Sets up the proper tags to get from the stivale boot protocol.
            .identifier = STIVALE2_HEADER_TAG_TERMINAL_ID,
            .next = 0
        },
-
        .flags = 0
    };
    
@@ -64,27 +63,23 @@ Sets up the proper tags to get from the stivale boot protocol.
 The following function will allow us to scan for tags that we want
 
 #+BEGIN_SRC c
-    // We will now write a helper function which will allow us to scan for tags
-    // that we want FROM the bootloader (structure tags).
-    void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
-        struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
-        for (;;) {
-            // If the tag pointer is NULL (end of linked list), we did not find
-            // the tag. Return NULL to signal this.
-            if (current_tag == NULL) {
-                return NULL;
-            }
   
-            // Check whether the identifier matches. If it does, return a pointer
-            // to the matching tag.
-            if (current_tag->identifier == id) {
-                return current_tag;
-            }
+       void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
+           struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
+           for (;;) {
+               if (!current_tag)
+               {
+                   return NULL;
+               }
   
-            // Get a pointer to the next tag in the linked list and repeat.
-            current_tag = (void *)current_tag->next;
-        }
-    }
+               if (current_tag->identifier == id)
+               {
+                   return current_tag;
+               }
+  
+               current_tag = (void *)current_tag->next;
+           }
+       }
 #+END_SRC
 
 ** Main function
