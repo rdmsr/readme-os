@@ -39,7 +39,7 @@ ISO_IMAGE = disk.iso
 all: $(ISO_IMAGE)
 
 run: $(ISO_IMAGE)
-	qemu-system-x86_64 -M q35 -m 2G -cdrom $(ISO_IMAGE) -enable-kvm
+	qemu-system-x86_64 -M q35 -m 2G -cdrom $(ISO_IMAGE) -enable-kvm -serial stdio
 
 limine:
 	git clone https://github.com/limine-bootloader/limine.git --branch=v2.0-branch-binary --depth=1

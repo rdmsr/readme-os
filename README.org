@@ -63,46 +63,126 @@ Sets up the proper tags to get from the stivale boot protocol; Here we want to g
 The following function will allow us to scan for tags that we want
 
 #+BEGIN_SRC c
+void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id)
+{
+              struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
+              for (;;)
+              {
+                  if (!current_tag)
+                  {
+                      return NULL;
+                  }
   
-       void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
-           struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
-           for (;;) {
-               if (!current_tag)
-               {
-                   return NULL;
-               }
+                  if (current_tag->identifier == id)
+                  {
+                      return current_tag;
+                  }
   
-               if (current_tag->identifier == id)
-               {
-                   return current_tag;
-               }
+                  current_tag = (void *)current_tag->next;
+              }
+}
+#+END_SRC
+
+** Helper functions
+This is where we'll write helper functions for our kernel, let's start by assembly ones.
+
+#+BEGIN_SRC c
+uint8_t inb(uint16_t port)
+{
+    uint8_t data;
+    __asm__ volatile("inb %1, %0"
+                     : "=a"(data)
+                     : "d"(port));
+    return data;
+}
+
+void outb(uint16_t port, uint8_t data)
+{
+    __asm__ volatile("outb %0, %1"
+                     :
+                     : "a"(data), "Nd"(port));
+}
+#+END_SRC
+
+** Drivers
+*** COM
+In this part of the kernel, we'll setup a COM driver to debug our kernel.
+#+BEGIN_SRC c
+  typedef enum
+  {
+        COM1 = 0x3F8,
+        COM2 = 0x2F8,
+        COM3 = 0x3E8,
+        COM4 = 0x2E8
+  } SerialPort;
   
-               current_tag = (void *)current_tag->next;
-           }
-       }
+  static int is_transmit_empty(SerialPort port)
+  {
+     return inb(port + 5) & 0x20;
+  }
+  
+  static int serial_received(SerialPort port)
+  {
+     return inb(port + 5) & 1;
+  }
+  
+  void com_initialize(SerialPort port)
+  {
+     outb(port + 1, 0x00);
+     outb(port + 3, 0x80);
+     outb(port + 0, 0x03);
+     outb(port + 1, 0x00);
+     outb(port + 3, 0x03);
+     outb(port + 2, 0xC7);
+     outb(port + 4, 0x0B);
+   }
+  
+  void com_putc(SerialPort port, char c)
+  {
+      while (is_transmit_empty(port) == 0);
+      outb(port, c);
+  }
+  
+  void com_write_string(SerialPort port, char *str)
+  {
+    while (*str)
+    {
+        com_putc(port, *str++);
+    }
+  }
+  
+  
+  
+  char com_getc(SerialPort port)
+  {
+      while (serial_received(port) == 0);
+      return inb(port);
+  }
 #+END_SRC
 
 ** Main function
 This is our kernel's entry point
 #+BEGIN_SRC c
-     void _start(struct stivale2_struct *stivale2_struct) {
-        struct stivale2_struct_tag_terminal *term_str_tag;
-        term_str_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
+   void _start(struct stivale2_struct *stivale2_struct) {
+      struct stivale2_struct_tag_terminal *term_str_tag;
+      term_str_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
   
-        if (!term_str_tag) {
-            for (;;) {
-                __asm__ volatile("hlt");
-            }
-        }
+      if (!term_str_tag) {
+          for (;;) {
+              __asm__ volatile("hlt");
+          }
+      }
   
-        void *term_write_ptr = (void *)term_str_tag->term_write;
+      void *term_write_ptr = (void *)term_str_tag->term_write;
   
-        void (*term_write)(const char *string, size_t length) = term_write_ptr;
- 
-        term_write("Welcome to org-kernel", 21);
+      void (*term_write)(const char *string, size_t length) = term_write_ptr;
   
-        for (;;) {
-            __asm__("hlt");
-        }
-    }
+      term_write("Welcome to org-kernel", 21);
+      com_initialize(COM1);
+      com_write_string(COM1,"hello");
+  
+      for (;;) {
+          __asm__("hlt");
+      }
+  }
 #+END_SRC
