@@ -1,8 +1,7 @@
-#+TITLE: Main file
-#+PROPERTY: header-args :tangle yes
+#+TITLE: ReadmeOS
+#+PROPERTY: header-args :tangle main.c
 
-* Welcome to org-kernel
-This is a kernel written in org.
+This is kernel written in the readme using literate programming with emacs org-mode.
 
 * Code
 ** Includes
