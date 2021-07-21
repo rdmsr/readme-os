@@ -1,7 +1,18 @@
 #+TITLE: ReadmeOS
 #+PROPERTY: header-args:c :tangle main.c
-
 This is a little kernel written in this repository's readme using literate programming with emacs org-mode.
+
+* Table of contents                                                     :TOC_4:
+- [[#building][Building]]
+  - [[#prerequisites][Prerequisites]]
+  - [[#building-and-running][Building and running]]
+- [[#code][Code]]
+  - [[#includes][Includes]]
+  - [[#stivale-tags][Stivale tags]]
+  - [[#helper-functions][Helper functions]]
+  - [[#drivers][Drivers]]
+    - [[#com][COM]]
+  - [[#main-function][Main function]]
 
 * Building
 ** Prerequisites
