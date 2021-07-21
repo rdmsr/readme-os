@@ -1,7 +1,18 @@
 #+TITLE: ReadmeOS
-#+PROPERTY: header-args :tangle main.c
+#+PROPERTY: header-args:c :tangle main.c
 
-This is kernel written in the readme using literate programming with emacs org-mode.
+This is a little kernel written in this repository's readme using literate programming with emacs org-mode.
+
+* Building
+** Prerequisites
+To build the kernel, you need:
+- Emacs with org-mode installed
+- x86_64-elf-gcc (if you don't have it use gcc)
+- GNU Make
+- wget
+- git
+** Building and running
+Run =make= and =make run= to build and run the kernel
 
 * Code
 ** Includes
